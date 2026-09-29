@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -8,23 +9,33 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  String? _selectedType;
+  String? _selectedFileName;
   final TextEditingController _captionController = TextEditingController();
 
+  // Mobile Gallery / Browser File Picker Function
+  Future<void> _pickFile(FileType type) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: type);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        _selectedFileName = result.files.first.name;
+      });
+    }
+  }
+
   void _sharePost() {
-    if (_selectedType == null) {
+    if (_selectedFileName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kripya pehle Photo ya Video select karein!")),
+        const SnackBar(content: Text("Kripya pehle photo ya video gallery se select karein!")),
       );
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$_selectedType Posted Successfully!")),
+      const SnackBar(content: Text("Post Successfully Uploaded!")),
     );
 
     setState(() {
-      _selectedType = null;
+      _selectedFileName = null;
       _captionController.clear();
     });
   }
@@ -49,22 +60,22 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: Colors.amber),
               ),
-              child: _selectedType != null
+              child: _selectedFileName != null
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          _selectedType == "Video" ? Icons.videocam : Icons.image,
-                          size: 60,
-                          color: Colors.amber,
-                        ),
+                        const Icon(Icons.check_circle, size: 60, color: Colors.amber),
                         const SizedBox(height: 10),
-                        Text(
-                          "$_selectedType Selected",
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            _selectedFileName!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
                         ),
                         TextButton(
-                          onPressed: () => setState(() => _selectedType = null),
+                          onPressed: () => setState(() => _selectedFileName = null),
                           child: const Text("Remove", style: TextStyle(color: Colors.red)),
                         ),
                       ],
@@ -74,21 +85,21 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       children: [
                         const Icon(Icons.add_a_photo, size: 50, color: Colors.amber),
                         const SizedBox(height: 10),
-                        const Text("Select media type", style: TextStyle(color: Colors.grey)),
+                        const Text("Open Gallery to Pick File", style: TextStyle(color: Colors.grey)),
                         const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                              onPressed: () => setState(() => _selectedType = "Photo"),
+                              onPressed: () => _pickFile(FileType.image),
                               icon: const Icon(Icons.image, color: Colors.black),
                               label: const Text("Photo", style: TextStyle(color: Colors.black)),
                             ),
                             const SizedBox(width: 15),
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                              onPressed: () => setState(() => _selectedType = "Video"),
+                              onPressed: () => _pickFile(FileType.video),
                               icon: const Icon(Icons.videocam, color: Colors.black),
                               label: const Text("Video", style: TextStyle(color: Colors.black)),
                             ),
@@ -107,10 +118,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey[900],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 25),
