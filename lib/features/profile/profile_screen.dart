@@ -1,175 +1,171 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ProfileScreenState extends State<ProfileScreen> {
+  String username = "Loading...";
+  String name = "User";
+  String bio = "Welcome to my Rabbit profile!";
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _loadUserData();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  // Local storage se logged-in user details fetch karna
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = prefs.getString('username') ?? "@user";
+      name = prefs.getString('name') ?? "My Name";
+      bio = prefs.getString('bio') ?? "Welcome to my Rabbit profile!";
+    });
+  }
+
+  // Edit Profile Dialog Open Karna
+  void _showEditProfileDialog() {
+    TextEditingController nameController = TextEditingController(text: name);
+    TextEditingController bioController = TextEditingController(text: bio);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Edit Profile",
+                style: TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: "Name",
+                  labelStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: bioController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: "Bio",
+                  labelStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('name', nameController.text);
+                    await prefs.setString('bio', bioController.text);
+
+                    setState(() {
+                      name = nameController.text;
+                      bio = bioController.text;
+                    });
+
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Save Changes", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        elevation: 0,
-        title: const Text(
-          'My Profile',
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 22),
-        ),
+        title: const Text("My Profile", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              // Settings screen action
+              // Settings Action
             },
-          ),
+          )
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            // User Header Info
+            const SizedBox(height: 20),
+            const CircleAvatar(
+              radius: 45,
+              backgroundColor: Colors.amber,
+              child: Icon(Icons.person, size: 50, color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+            Text(name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(username, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 38,
-                    backgroundColor: Colors.amber,
-                    child: Icon(Icons.person, size: 45, color: Colors.black),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'My Name',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          '@myusername',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.amber),
-                            minimumSize: const Size(120, 32),
-                          ),
-                          child: const Text('Edit Profile', style: TextStyle(color: Colors.amber, fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(bio, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+            ),
+            const SizedBox(height: 15),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.amber),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
+              onPressed: _showEditProfileDialog,
+              child: const Text("Edit Profile", style: TextStyle(color: Colors.amber)),
             ),
             const SizedBox(height: 20),
-
-            // User Stats Section
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatColumn('Posts', '12'),
-                  _buildStatColumn('Followers', '120'),
-                  _buildStatColumn('Following', '85'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Content Tabs (All Posts vs Short Videos)
-            TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.amber,
-              labelColor: Colors.amber,
-              unselectedLabelColor: Colors.grey,
-              tabs: const [
-                Tab(text: 'All Posts'),
-                Tab(text: 'Short Videos'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatItem("0", "Posts"),
+                _buildStatItem("0", "Followers"),
+                _buildStatItem("0", "Following"),
               ],
             ),
-
-            // Content Grids
-            SizedBox(
-              height: 400,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Posts Grid View
-                  GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 6,
-                      mainAxisSpacing: 6,
-                    ),
-                    itemCount: 9,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        color: Colors.grey[850],
-                        child: const Icon(Icons.image, color: Colors.grey),
-                      );
-                    },
-                  ),
-                  // Short Videos Grid View
-                  GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 6,
-                      mainAxisSpacing: 6,
-                      childAspectRatio: 0.7,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        color: Colors.grey[850],
-                        child: const Icon(Icons.play_circle_fill, color: Colors.amber),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+            const Divider(color: Colors.grey, height: 30),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatColumn(String label, String count) {
+  Widget _buildStatItem(String count, String label) {
     return Column(
       children: [
-        Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 4),
+        Text(count, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
     );
