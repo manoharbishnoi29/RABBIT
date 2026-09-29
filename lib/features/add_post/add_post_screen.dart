@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -9,45 +8,23 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  XFile? _selectedFile;
-  bool _isVideo = false;
+  String? _selectedType;
   final TextEditingController _captionController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedFile = image;
-        _isVideo = false;
-      });
-    }
-  }
-
-  Future<void> _pickVideo() async {
-    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
-    if (video != null) {
-      setState(() {
-        _selectedFile = video;
-        _isVideo = true;
-      });
-    }
-  }
 
   void _sharePost() {
-    if (_selectedFile == null) {
+    if (_selectedType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kripya pehle photo ya video select karein!")),
+        const SnackBar(content: Text("Kripya pehle Photo ya Video select karein!")),
       );
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isVideo ? "Video Posted Successfully!" : "Photo Posted Successfully!")),
+      SnackBar(content: Text("$_selectedType Posted Successfully!")),
     );
 
     setState(() {
-      _selectedFile = null;
+      _selectedType = null;
       _captionController.clear();
     });
   }
@@ -72,22 +49,22 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: Colors.amber),
               ),
-              child: _selectedFile != null
+              child: _selectedType != null
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          _isVideo ? Icons.videocam : Icons.image,
+                          _selectedType == "Video" ? Icons.videocam : Icons.image,
                           size: 60,
                           color: Colors.amber,
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          _isVideo ? "Video Selected" : "Photo Selected",
+                          "$_selectedType Selected",
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                         TextButton(
-                          onPressed: () => setState(() => _selectedFile = null),
+                          onPressed: () => setState(() => _selectedType = null),
                           child: const Text("Remove", style: TextStyle(color: Colors.red)),
                         ),
                       ],
@@ -97,21 +74,21 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       children: [
                         const Icon(Icons.add_a_photo, size: 50, color: Colors.amber),
                         const SizedBox(height: 10),
-                        const Text("Select media from gallery", style: TextStyle(color: Colors.grey)),
+                        const Text("Select media type", style: TextStyle(color: Colors.grey)),
                         const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                              onPressed: _pickImage,
+                              onPressed: () => setState(() => _selectedType = "Photo"),
                               icon: const Icon(Icons.image, color: Colors.black),
                               label: const Text("Photo", style: TextStyle(color: Colors.black)),
                             ),
                             const SizedBox(width: 15),
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                              onPressed: _pickVideo,
+                              onPressed: () => setState(() => _selectedType = "Video"),
                               icon: const Icon(Icons.videocam, color: Colors.black),
                               label: const Text("Video", style: TextStyle(color: Colors.black)),
                             ),
