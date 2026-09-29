@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({Key? key}) : super(key: key);
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -13,32 +13,31 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: TextField(
           controller: _searchController,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            hintText: 'Search users or posts...',
+            hintText: "Search users or posts...",
             hintStyle: const TextStyle(color: Colors.grey),
             prefixIcon: const Icon(Icons.search, color: Colors.amber),
-            border: InputBorder.none,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.grey[900],
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
           ),
         ),
       ),
-      body: ListView.builder(
-        itemCount: 8,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Colors.amber,
-              child: Icon(Icons.person, color: Colors.black),
-            ),
-            title: Text('Search Result ${index + 1}', style: const TextStyle(color: Colors.white)),
-            subtitle: const Text('User description or bio', style: TextStyle(color: Colors.grey)),
-            onTap: () {},
-          );
-        },
+      body: const Center(
+        child: Text(
+          "Type above to search users",
+          style: TextStyle(color: Colors.grey),
+        ),
       ),
     );
   }
