@@ -1,38 +1,59 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddPostScreen extends StatefulWidget {
-  const AddPostScreen({super.key});
+  const AddPostScreen({Key? key}) : super(key: key);
 
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
+  XFile? _selectedFile;
+  bool _isVideo = false;
   final TextEditingController _captionController = TextEditingController();
-  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
 
-  void _uploadPost() {
-    if (_captionController.text.trim().isEmpty) {
+  // Gallery se Photo pick karne ka function
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedFile = image;
+        _isVideo = false;
+      });
+    }
+  }
+
+  // Gallery se Video pick karne ka function
+  Future<void> _pickVideo() async {
+    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+    if (video != null) {
+      setState(() {
+        _selectedFile = video;
+        _isVideo = true;
+      });
+    }
+  }
+
+  // Post Share karne ka function
+  void _sharePost() {
+    if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add a caption for your post!')),
+        const SnackBar(content: Text("Kripya pehle photo ya video select karein!")),
       );
       return;
     }
 
+    // Success Message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_isVideo ? "Video Posted Successfully!" : "Photo Posted Successfully!")),
+    );
+
+    // Reset Form
     setState(() {
-      _isUploading = true;
-    });
-
-    // Simulated post upload delay
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isUploading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post published successfully!')),
-      );
-
+      _selectedFile = null;
       _captionController.clear();
     });
   }
@@ -40,85 +61,106 @@ class _AddPostScreenState extends State<AddPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text(
-          'Create New Post',
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Create New Post", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Selection Area Placeholder
-              GestureDetector(
-                onTap: () {
-                  // Image picker action logic
-                },
-                child: Container(
-                  height: 250,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber, width: 1),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.add_a_photo, size: 50, color: Colors.amber),
-                      SizedBox(height: 10),
-                      Text(
-                        'Tap to select a photo from gallery',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Preview Box / Media Selection Box
+            Container(
+              height: 250,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.amber),
               ),
-              const SizedBox(height: 20),
-
-              // Caption Input
-              TextField(
-                controller: _captionController,
-                maxLines: 3,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Write a caption...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Post Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isUploading ? null : _uploadPost,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
-                  ),
-                  child: _isUploading
-                      ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text(
-                          'Share Post',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: _selectedFile != null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isVideo ? Icons.videocam : Icons.image,
+                          size: 60,
+                          color: Colors.amber,
                         ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _isVideo ? "Video Selected" : "Photo Selected",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        TextButton(
+                          onPressed: () => setState(() => _selectedFile = null),
+                          child: const Text("Remove", style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.add_a_photo, size: 50, color: Colors.amber),
+                        const SizedBox(height: 10),
+                        const Text("Select media from gallery", style: TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                              onPressed: _pickImage,
+                              icon: const Icon(Icons.image, color: Colors.black),
+                              label: const Text("Photo", style: TextStyle(color: Colors.black)),
+                            ),
+                            const SizedBox(width: 15),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                              onPressed: _pickVideo,
+                              icon: const Icon(Icons.videocam, color: Colors.black),
+                              label: const Text("Video", style: TextStyle(color: Colors.black)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 20),
+
+            // Caption Box
+            TextField(
+              controller: _captionController,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: "Write a caption...",
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[900],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 25),
+
+            // Share Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                ),
+                onPressed: _sharePost,
+                child: const Text("Share Post", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ),
       ),
     );
