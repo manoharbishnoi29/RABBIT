@@ -1,9 +1,11 @@
 name: rabbit
-description: A new Flutter social media application.
-publish_to: 'none'
+description: "A new Flutter social media application."
+publish_to: "none"
+
+version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=3.19.0"
 
 dependencies:
@@ -19,4 +21,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
