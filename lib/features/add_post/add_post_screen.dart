@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,7 +14,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final TextEditingController _captionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
-  // Gallery se Photo pick karne ka function
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -26,7 +24,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
   }
 
-  // Gallery se Video pick karne ka function
   Future<void> _pickVideo() async {
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
@@ -37,7 +34,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
   }
 
-  // Post Share karne ka function
   void _sharePost() {
     if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,12 +42,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
       return;
     }
 
-    // Success Message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_isVideo ? "Video Posted Successfully!" : "Photo Posted Successfully!")),
     );
 
-    // Reset Form
     setState(() {
       _selectedFile = null;
       _captionController.clear();
@@ -70,7 +64,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Preview Box / Media Selection Box
             Container(
               height: 250,
               width: double.infinity,
@@ -128,8 +121,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     ),
             ),
             const SizedBox(height: 20),
-
-            // Caption Box
             TextField(
               controller: _captionController,
               style: const TextStyle(color: Colors.white),
@@ -146,8 +137,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
             ),
             const SizedBox(height: 25),
-
-            // Share Button
             SizedBox(
               width: double.infinity,
               height: 50,
