@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -11,8 +13,8 @@ class AddPostScreen extends StatefulWidget {
 class _AddPostScreenState extends State<AddPostScreen> {
   String? _selectedFileName;
   final TextEditingController _captionController = TextEditingController();
+  bool isUploading = false;
 
-  // Mobile Gallery / Browser File Picker Function
   Future<void> _pickFile(FileType type) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: type);
     if (result != null && result.files.isNotEmpty) {
@@ -22,22 +24,38 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
   }
 
-  void _sharePost() {
-    if (_selectedFileName == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kripya pehle photo ya video gallery se select karein!")),
-      );
+  Future<void> _sharePost() async {
+    final caption = _captionController.text.trim();
+    if (_selectedFileName == null && caption.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Kuch caption ya file select karein!")));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Post Successfully Uploaded!")),
-    );
+    setState(() => isUploading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+      final username = userDoc.data()?['username'] ?? 'User';
 
-    setState(() {
-      _selectedFileName = null;
-      _captionController.clear();
-    });
+      await FirebaseFirestore.instance.collection('posts').add({
+        'uid': user.uid,
+        'username': username,
+        'caption': caption,
+        'fileName': _selectedFileName ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+        'likes': 0,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post Successfully Uploaded!")));
+      setState(() {
+        _selectedFileName = null;
+        _captionController.clear();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    } finally {
+      if (mounted) setState(() => isUploading = false);
+    }
   }
 
   @override
@@ -53,7 +71,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
         child: Column(
           children: [
             Container(
-              height: 250,
+              height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey[900],
@@ -64,29 +82,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check_circle, size: 60, color: Colors.amber),
+                        const Icon(Icons.check_circle, size: 50, color: Colors.amber),
                         const SizedBox(height: 10),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            _selectedFileName!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => setState(() => _selectedFileName = null),
-                          child: const Text("Remove", style: TextStyle(color: Colors.red)),
-                        ),
+                        Text(_selectedFileName!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        TextButton(onPressed: () => setState(() => _selectedFileName = null), child: const Text("Remove", style: TextStyle(color: Colors.red))),
                       ],
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.add_a_photo, size: 50, color: Colors.amber),
+                        const Icon(Icons.add_a_photo, size: 40, color: Colors.amber),
                         const SizedBox(height: 10),
-                        const Text("Open Gallery to Pick File", style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -122,18 +128,20 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
             ),
             const SizedBox(height: 25),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                ),
-                onPressed: _sharePost,
-                child: const Text("Share Post", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ),
+            isUploading
+                ? const CircularProgressIndicator(color: Colors.amber)
+                : SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                      ),
+                      onPressed: _sharePost,
+                      child: const Text("Share Post", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
           ],
         ),
       ),
