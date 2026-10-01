@@ -48,7 +48,10 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.amber)));
+          return const Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(child: CircularProgressIndicator(color: Colors.amber)),
+          );
         }
         if (snapshot.hasData) {
           return const MainNavigationScreen();
@@ -79,16 +82,24 @@ class _AuthScreenState extends State<AuthScreen> {
     final username = _usernameController.text.trim();
 
     if (email.isEmpty || password.isEmpty || (!isLogin && username.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sari details bharein!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Sari details bharein!")),
+      );
       return;
     }
 
     setState(() => isLoading = true);
     try {
       if (isLogin) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
       } else {
-        UserCredential res = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+        UserCredential res = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
         await FirebaseFirestore.instance.collection('users').doc(res.user!.uid).set({
           'uid': res.user!.uid,
           'email': email,
@@ -112,27 +123,39 @@ class _AuthScreenState extends State<AuthScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              const Text("Rabbit 🐇", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.amber)),
+              const Text(
+                "Rabbit 🐇",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.amber),
+              ),
               const SizedBox(height: 30),
               if (!isLogin) ...[
                 TextField(
                   controller: _usernameController,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(labelText: 'Username', labelStyle: TextStyle(color: Colors.grey)),
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    labelStyle: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 const SizedBox(height: 15),
               ],
               TextField(
                 controller: _emailController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Email', labelStyle: TextStyle(color: Colors.grey)),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
               ),
               const SizedBox(height: 15),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Password', labelStyle: TextStyle(color: Colors.grey)),
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
               ),
               const SizedBox(height: 25),
               isLoading
@@ -142,12 +165,18 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                         onPressed: _submit,
-                        child: Text(isLogin ? "Login" : "Sign Up", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          isLogin ? "Login" : "Sign Up",
+                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
               TextButton(
                 onPressed: () => setState(() => isLogin = !isLogin),
-                child: Text(isLogin ? "Naya account banayein (Sign Up)" : "Pehle se account hai? Login karein", style: const TextStyle(color: Colors.amber)),
+                child: Text(
+                  isLogin ? "Naya account banayein (Sign Up)" : "Pehle se account hai? Login karein",
+                  style: const TextStyle(color: Colors.amber),
+                ),
               )
             ],
           ),
